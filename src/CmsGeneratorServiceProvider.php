@@ -24,7 +24,6 @@ class CmsGeneratorServiceProvider extends ServiceProvider
             __DIR__ . '/../config/cmsgenerator.php' => config_path('cmsgenerator.php'),
         ], 'cmsbuilder');
 
-
         $this->publishes([
             __DIR__ . 'cmsbuilder.json' => base_path('/'),
         ], 'cmsbuilder');
@@ -42,7 +41,7 @@ class CmsGeneratorServiceProvider extends ServiceProvider
     public function register()
     {
         $this->commands(
-            'Suprb\CmsGenerator\Commands\CMSGeneratorCommand',
+            'Suprb\CmsGenerator\Commands\CMSGeneratorCommand'
             // 'Suprb\CmsGenerator\Commands\CrudControllerCommand',
             // 'Suprb\CmsGenerator\Commands\CrudModelCommand',
             // 'Suprb\CmsGenerator\Commands\CrudMigrationCommand',
