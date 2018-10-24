@@ -14,6 +14,7 @@ class CMSGeneratorCommand extends Command
     private $model_path;
     private $controller_path;
     private $view_path;
+    private $middleware_path;
 
     public function __construct()
     {
@@ -21,7 +22,19 @@ class CMSGeneratorCommand extends Command
         $this->migration_path = database_path('migrations/cms/');
         $this->model_path = app_path('Models/');
         $this->controller_path = app_path('Http/Controllers/Admin/');
+        $this->middleware_path = app_path('Http/Kernel.php');
         $this->view_path = resource_path('views/admin/');
+        $this->middleware_string = "protected \$routeMiddleware = [
+        'auth' => \App\Http\Middleware\Authenticate::class,
+        'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
+        'bindings' => \Illuminate\Routing\Middleware\SubstituteBindings::class,
+        'cache.headers' => \Illuminate\Http\Middleware\SetCacheHeaders::class,
+        'can' => \Illuminate\Auth\Middleware\Authorize::class,
+        'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
+        'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
+        'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
+        'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+    ];";
 
     }
 
@@ -54,6 +67,8 @@ class CMSGeneratorCommand extends Command
     public function handle()
     {
         $this->getJsonFile();
+        $this->thirdParty();
+
         //CREATE MODEL FOLDER
         File::makeDirectory($this->model_path, $mode = 0777, true, true);
         //CREATE MIGRATION FOLDER
@@ -73,6 +88,38 @@ class CMSGeneratorCommand extends Command
         });
         $this->appendRouteWeb();
 
+    }
+
+    public function thirdParty()
+    {
+        // ADMIN LTE
+        $this->call('vendor:publish', [
+            "--provider" => "JeroenNoten\LaravelAdminLte\ServiceProvider",
+            "--tag" => "assets",
+            "--force" => "",
+        ]);
+        $this->call('vendor:publish', [
+            "--provider" => "JeroenNoten\LaravelAdminLte\ServiceProvider",
+            "--tag" => "config",
+            "--force" => "",
+        ]);
+
+        $middleware_content = File::get($this->middleware_path);
+        $middleware_replace = "protected \$routeMiddleware = [
+        'auth' => \App\Http\Middleware\Authenticate::class,
+        'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
+        'bindings' => \Illuminate\Routing\Middleware\SubstituteBindings::class,
+        'cache.headers' => \Illuminate\Http\Middleware\SetCacheHeaders::class,
+        'can' => \Illuminate\Auth\Middleware\Authorize::class,
+        'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
+        'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
+        'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
+        'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+        'jwt.auth' => 'Tymon\JWTAuth\Middleware\GetUserFromToken',
+        'jwt.refresh' => 'Tymon\JWTAuth\Middleware\RefreshToken',
+    ];";
+        $middleware_content = str_replace($this->middleware_string, $middleware_replace, $middleware_content);
+        file_put_contents($this->middleware_path, $middleware_content);
     }
 
     public function appendRouteWeb()
@@ -245,9 +292,15 @@ class CMSGeneratorCommand extends Command
         } else {
             $Stub = str_replace("{{relationships}}", "", $Stub);
         }
+
         //CREATE FILE
         $this->info('Create Model :' . $this->model_path . $model->name . '.php');
         file_put_contents($this->model_path . $model->name . '.php', $Stub);
+        if ($model->resource) {
+            $collection = $model->name . "Collection";
+            $this->info("Create Resource " . $collection);
+            exec('php artisan make:resource ' . $collection);
+        }
     }
 
     public function getJsonFile()
