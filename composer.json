@@ -13,7 +13,7 @@
     "autoload": {
         "psr-4": {
             "Suprb\\CmsGenerator\\": "src/"
-        },
+        }
     },
     "authors": [
         {
