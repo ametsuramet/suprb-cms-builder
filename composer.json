@@ -1,0 +1,35 @@
+{
+    "name": "ametsuramet/suprb-cms-builder",
+    "description": "CMS Builder for Laravel 5.5+",
+    "type": "library",
+    "require": {
+        "jeroennoten/laravel-adminlte": "^1.24",
+        "laracasts/flash": "^3.0",
+        "spatie/laravel-permission": "^2.21",
+        "spatie/laravel-sluggable": "^2.1",
+        "unisharp/laravel-filemanager": "~1.8"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Suprb\\CmsGenerator\\": "src/"
+        },
+        "classmap": [
+            "tests"
+        ]
+    },
+    "authors": [
+        {
+            "name": "amet suramet",
+            "email": "ametsuramet@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Suprb\\CmsGenerator\\CmsGeneratorServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev"
+}
