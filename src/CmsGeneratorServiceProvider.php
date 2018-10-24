@@ -25,8 +25,8 @@ class CmsGeneratorServiceProvider extends ServiceProvider
         ], 'cmsbuilder');
 
         $this->publishes([
-            __DIR__ . 'cmsbuilder.json' => base_path('/'),
-        ], 'cmsbuilder');
+            __DIR__ . '/cmsbuilder.json' => base_path('/cmsbuilder.json'),
+        ], 'cmsbuilder-json');
 
         $this->publishes([
             __DIR__ . '/stubs/' => base_path('resources/cms-generator/'),

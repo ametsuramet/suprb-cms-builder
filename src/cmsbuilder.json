@@ -1,0 +1,25 @@
+[
+	{
+		"name": "Article",
+		"softdelete": false,
+		"primaryKey": null,
+		"schema": [
+			{
+				"field": "title",
+				"type": "string",
+				"nullable": true,
+				"default": "NULL",
+				"form_type": "text",
+				"options": []
+			},
+			{
+				"field": "description",
+				"type": "text",
+				"nullable": true,
+				"default": "NULL",
+				"form_type": "textarea",
+				"options": []
+			}
+		]
+	}
+]
