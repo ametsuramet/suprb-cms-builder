@@ -7,7 +7,8 @@
         "laracasts/flash": "^3.0",
         "spatie/laravel-permission": "^2.21",
         "spatie/laravel-sluggable": "^2.1",
-        "unisharp/laravel-filemanager": "~1.8"
+        "unisharp/laravel-filemanager": "~1.8",
+        "tymon/jwt-auth": "1.0.*"
     },
     "license": "MIT",
     "autoload": {

@@ -4,7 +4,9 @@
 		"softdelete": false,
 		"primaryKey": null,
 		"resource": true,
-		"relations": [],
+		"relations": [
+			{"type": "belongs_to", "target":"Category"}
+		],
 		"schema": [
 			{
 				"field": "title",
@@ -32,6 +34,14 @@
 					{"value": 1, "label": "user 1"},
 					{"value": 2, "label": "user 2"}
 				]
+			},
+			{
+				"field": "category_id",
+				"type": "integer:unsigned",
+				"nullable": true,
+				"default": "NULL",
+				"form_type": "select",
+				"options": []
 			},
 			{
 				"field": "publish",
@@ -78,6 +88,25 @@
 				"nullable": true,
 				"default": "NULL",
 				"form_type": "textarea",
+				"options": []
+			}
+		]
+	},
+	{
+		"name": "Category",
+		"softdelete": false,
+		"primaryKey": null,
+		"resource": true,
+		"relations": [
+			{"type": "has_many", "target":"Book"}
+		],
+		"schema": [
+			{
+				"field": "name",
+				"type": "string",
+				"nullable": true,
+				"default": "NULL",
+				"form_type": "text",
 				"options": []
 			}
 		]

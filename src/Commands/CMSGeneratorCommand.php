@@ -175,8 +175,17 @@ class CMSGeneratorCommand extends Command
 
         $Stub = str_replace("{{fields}}", $fields, $Stub);
         $Stub = str_replace("{{schema_down}}", "Schema::dropIfExists('" . str_plural(snake_case($model->name)) . "');", $Stub);
-
-        $filename = date("Y_m_d_His") . "_create_" . str_plural(snake_case($model->name)) . "_table.php";
+        $suffix = "_create_" . str_plural(snake_case($model->name)) . "_table.php";
+        $filename = date("Y_m_d_His") . $suffix;
+        $id = 123;
+        $handler = opendir($this->migration_path);
+        while ($file = readdir($handler)) {
+            if ($file !== "." && $file !== "..") {
+                if (preg_match("/{$suffix}/", $file)) {
+                    unlink($this->migration_path . $file);
+                }
+            }
+        }
         $this->info('Create Migration :' . $this->migration_path . $filename);
         file_put_contents($this->migration_path . $filename, $Stub);
 
@@ -210,8 +219,32 @@ class CMSGeneratorCommand extends Command
         $fillable .= "\n\t\t]";
         $Stub = str_replace("{{fillable}}", $fillable, $Stub);
         $Stub = str_replace("{{hidden}}", "", $Stub);
-        $Stub = str_replace("{{relationships}}", "", $Stub);
 
+        if (count($model->relations)) {
+            $relationships = "";
+            foreach ($model->relations as $relation) {
+                $relationships .= "\n\tpublic function ";
+                if ($relation->type == 'belongs_to') {
+                    $relationships .= snake_case($relation->target) . "()";
+                    $relationships .= "\n\t{";
+                    $relationships .= "\n\t\treturn \$this->belongsTo(" . $relation->target . "::class);";
+                }
+                if ($relation->type == 'has_many') {
+                    $relationships .= str_plural(snake_case($relation->target)) . "()";
+                    $relationships .= "\n\t{";
+                    $relationships .= "\n\t\treturn \$this->hasMany(" . $relation->target . "::class);";
+                }
+                if ($relation->type == 'has_one') {
+                    $relationships .= snake_case($relation->target) . "()";
+                    $relationships .= "\n\t{";
+                    $relationships .= "\n\t\treturn \$this->hasOne(" . $relation->target . "::class);";
+                }
+                $relationships .= "\n\t}";
+            }
+            $Stub = str_replace("{{relationships}}", $relationships, $Stub);
+        } else {
+            $Stub = str_replace("{{relationships}}", "", $Stub);
+        }
         //CREATE FILE
         $this->info('Create Model :' . $this->model_path . $model->name . '.php');
         file_put_contents($this->model_path . $model->name . '.php', $Stub);
