@@ -1,8 +1,10 @@
 [
 	{
-		"name": "Article",
+		"name": "Book",
 		"softdelete": false,
 		"primaryKey": null,
+		"resource": true,
+		"relations": [],
 		"schema": [
 			{
 				"field": "title",
@@ -14,6 +16,64 @@
 			},
 			{
 				"field": "description",
+				"type": "text",
+				"nullable": true,
+				"default": "NULL",
+				"form_type": "textarea",
+				"options": []
+			},
+			{
+				"field": "author_id",
+				"type": "integer:unsigned",
+				"nullable": true,
+				"default": "NULL",
+				"form_type": "select",
+				"options": [
+					{"value": 1, "label": "user 1"},
+					{"value": 2, "label": "user 2"}
+				]
+			},
+			{
+				"field": "publish",
+				"type": "boolean",
+				"nullable": false,
+				"default": "true",
+				"form_type": "radio",
+				"options": [
+					{"value": 1, "label": "option 1"},
+					{"value": 2, "label": "option 2"}
+				]
+			},
+			{
+				"field": "publish_country",
+				"type": "jsonb",
+				"nullable": false,
+				"default": null,
+				"form_type": "checkbox",
+				"options": [
+					{"value": 1, "label": "country 1"},
+					{"value": 2, "label": "country 2"}
+				]
+			}
+		]
+	},
+	{
+		"name": "Author",
+		"softdelete": false,
+		"primaryKey": null,
+		"resource": true,
+		"relations": [],
+		"schema": [
+			{
+				"field": "name",
+				"type": "string",
+				"nullable": true,
+				"default": "NULL",
+				"form_type": "text",
+				"options": []
+			},
+			{
+				"field": "address",
 				"type": "text",
 				"nullable": true,
 				"default": "NULL",

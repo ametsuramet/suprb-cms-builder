@@ -1,0 +1,65 @@
+@extends('adminlte::page')
+
+@section('title', '{{Model}}')
+
+@section('content_header')
+    <h1>{{Model}}</h1>
+    <ol class="breadcrumb">
+	    <li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
+	    <li><a href="/admin/{{name}}">{{Model}}</a></li>
+	    <li class="active">Lists</li>
+	 </ol>
+@stop
+
+
+@section('content')
+    @include('admin.misc.alert')
+    @include('flash::message')
+    <div class="row">
+    	<div class="col-md-12">
+    		<div class="box box-primary">
+					<div class="box-header">
+            <h3 class="box-title">
+              <a href="{!! route('admin.{{name}}.create') !!}" class="btn btn-primary pull-left"><i class="fa fa-plus"></i> {{Model}}</a>
+
+            </h3>
+            <div class="box-tools">
+
+                <form>
+              <div class="input-group input-group-sm" style="width: 300px;">
+                <input type="text" name="search" class="form-control pull-right" placeholder="Search">
+
+                <div class="input-group-btn">
+                  <button type="submit" class="btn btn-default"><i class="fa fa-search"></i></button>
+                </div>
+              </div>
+                </form>
+            </div>
+          </div>
+          <div class="box-body table-responsive">
+          	<table class="table table-hover">
+						  <tbody><tr>
+						    <th>#</th>{{tableHeader}}
+						    <th></th>
+						  </tr>
+						    @foreach($data as $i => $d)
+						    <tr>
+						      <td>{!! $i + $data->firstItem() !!}</td>{{tableBody}}
+						      <td>
+						        <form method="post" action="{!! route('admin.{{name}}.destroy', ['id' => $d->id]) !!}">
+						          <input type="hidden" name="_method" value="delete" />
+						          @csrf
+						        <div class="btn-group pull-right"><a href="{!! route('admin.{{name}}.edit', ['id' => $d->id]) !!}" class="btn btn-default btn-sm"><i class="fa fa-pencil"></i></a><button class="btn btn-danger btn-sm btn-delete"><i class="fa fa-trash"></i></button></div>
+						        </form>
+						      </td>
+						    </tr>
+						    @endforeach
+						  </tbody>
+						</table>
+						{!! $data->render() !!}
+          </div>
+    		</div>
+    	</div>
+
+    </div>
+@stop

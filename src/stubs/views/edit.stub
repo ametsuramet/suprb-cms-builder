@@ -1,0 +1,27 @@
+@extends('adminlte::page')
+
+@section('title', 'Edit {{Model}}')
+
+@section('content_header')
+    <h1>{{Model}}</h1>
+    <ol class="breadcrumb">
+	    <li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
+	    <li><a href="/admin/{{name}}">{{Model}}</a></li>
+	    <li class="active">Edit</li>
+	 </ol>
+@stop
+@section('content')
+		@include('admin.misc.alert')
+		@include('flash::message')
+	  <div class="row">
+	  	<form class="" method="post" action="{!! route('admin.{{name}}.update', ['id' => $data->id]) !!}" enctype="multipart/form-data">
+			<input type="hidden" name="_method" value="put" />
+	  		@csrf
+	  		@include('admin.{{name}}.form', ["title" => "Edit {{Model}}", 'edit' => true])
+  		</form>
+	  </div>
+@stop
+
+@section('js')
+
+@stop
