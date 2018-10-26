@@ -12,7 +12,6 @@
 @stop
 @section('content')
 		@include('admin.misc.alert')
-		@include('flash::message')
 	  <div class="row">
 	  	<form class="" method="post" action="{!! route('admin.{{name}}.update', ['id' => $data->id]) !!}" enctype="multipart/form-data">
 			<input type="hidden" name="_method" value="put" />

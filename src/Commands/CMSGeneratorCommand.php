@@ -13,6 +13,7 @@ class CMSGeneratorCommand extends Command
     private $migration_path;
     private $model_path;
     private $controller_path;
+    private $api_controller_path;
     private $view_path;
     private $middleware_path;
 
@@ -22,6 +23,7 @@ class CMSGeneratorCommand extends Command
         $this->migration_path = database_path('migrations/cms/');
         $this->model_path = app_path('Models/');
         $this->controller_path = app_path('Http/Controllers/Admin/');
+        $this->api_controller_path = app_path('Http/Controllers/Api/');
         $this->middleware_path = app_path('Http/Kernel.php');
         $this->view_path = resource_path('views/admin/');
         $this->middleware_string = "protected \$routeMiddleware = [
@@ -50,9 +52,17 @@ class CMSGeneratorCommand extends Command
     {
         return __DIR__ . '/../stubs/controller.stub';
     }
+    protected function getApiControllerStub()
+    {
+        return __DIR__ . '/../stubs/api_controller.stub';
+    }
     protected function getRouteWebStub()
     {
         return __DIR__ . '/../stubs/route-web.stub';
+    }
+    protected function getRouteApiStub()
+    {
+        return __DIR__ . '/../stubs/route-api.stub';
     }
     protected function getViewStub()
     {
@@ -66,6 +76,7 @@ class CMSGeneratorCommand extends Command
 
     public function handle()
     {
+        $this->alert("SUPRB CMS BUILDER by @ametsuramet");
         // ADMIN LTE
         $this->info("Publish CMS-BUILDER JSON");
         if (File::exists(base_path('cmsbuilder.json'))) {
@@ -93,6 +104,8 @@ class CMSGeneratorCommand extends Command
         File::makeDirectory($this->migration_path, $mode = 0777, true, true);
         //CREATE CONTROLLER FOLDER
         File::makeDirectory($this->controller_path, $mode = 0777, true, true);
+        //CREATE API CONTROLLER FOLDER
+        File::makeDirectory($this->api_controller_path, $mode = 0777, true, true);
 
         // dd([$this->migration_path, $this->model_path, $this->controller_path, $this->view_path]);
         $ModelStub = File::get($this->getModelStub());
@@ -103,9 +116,11 @@ class CMSGeneratorCommand extends Command
             $this->generateMigration($model, $MigrationStub);
             $this->generateController($model, $ControllerStub);
             $this->generateView($model);
+            $this->generateRequest($model);
         });
         $this->appendRouteWeb();
-        if ($this->confirm('Do you Automigration?')) {
+        $this->appendRouteApi();
+        if ($this->confirm('Do Automigration?')) {
             $this->line("start migration ....");
             $this->call('migrate');
             $this->call('migrate', [
@@ -120,6 +135,9 @@ class CMSGeneratorCommand extends Command
                 'password' => bcrypt('admin'),
             ]);
         }
+
+        exec('composer dump-autoload');
+        $this->alert("DONE");
     }
 
     public function thirdParty()
@@ -216,6 +234,24 @@ class CMSGeneratorCommand extends Command
         $this->info('Append Web Routes');
         file_put_contents(base_path('routes/web.php'), $Stub);
     }
+    public function appendRouteApi()
+    {
+        $Stub = File::get($this->getRouteApiStub());
+        $newRouteApi = "";
+        foreach ($this->models as $key => $model) {
+            $newRouteApi .= "\n\t\tRoute::resource('/" . str_plural(snake_case($model->name)) . "', 'Api\\" . $model->name . "Controller', ['as' => 'api']);";
+        }
+        $Stub = str_replace("{{newRouteApi}}", $newRouteApi, $Stub);
+        $this->info('Append Api Routes');
+        file_put_contents(base_path('routes/api.php'), $Stub);
+        $api_config = File::get(app_path('Providers/RouteServiceProvider.php'));
+        $api_config = str_replace("prefix('api')", "prefix('api/v1')", $api_config);
+        $api_config = str_replace("->middleware('api')", "//->middleware('api')", $api_config);
+        file_put_contents(app_path('Providers/RouteServiceProvider.php'), $api_config);
+        $auth_controller = File::get(__DIR__ . '/../stubs/AuthenticateController.stub');
+        file_put_contents(app_path('Http/Controllers/Auth/AuthenticateController.php'), $auth_controller);
+
+    }
 
     public function generateView($model)
     {
@@ -285,9 +321,32 @@ class CMSGeneratorCommand extends Command
         $Stub = str_replace("DummyNamespace", 'App\Http\Controllers\Admin', $Stub);
         $Stub = str_replace("{{DummyModel}}", $model->name, $Stub);
         $Stub = str_replace("{{name}}", str_plural(snake_case($model->name)), $Stub);
-        $this->info('Create Controller :' . $this->controller_path . $model->name . 'Controller.php');
+        $this->info('Create Controller Admin :' . $this->controller_path . $model->name . 'Controller.php');
 
         file_put_contents($this->controller_path . $model->name . 'Controller.php', $Stub);
+
+        if ($model->resource) {
+            $Stub2 = File::get($this->getApiControllerStub());
+            $Stub2 = str_replace("DummyClass", $model->name . 'Controller', $Stub2);
+            $Stub2 = str_replace("DummyNamespace", 'App\Http\Controllers\Api', $Stub2);
+            $Stub2 = str_replace("{{DummyModel}}", $model->name, $Stub2);
+            $Stub2 = str_replace("{{name}}", str_plural(snake_case($model->name)), $Stub2);
+
+            file_put_contents($this->api_controller_path . $model->name . 'Controller.php', $Stub2);
+
+        }
+    }
+
+    public function generateRequest($model)
+    {
+        $path = app_path('Http/Requests');
+        foreach (["Create", "Edit", "ApiCreate", "ApiEdit"] as $key => $value) {
+            $this->info('Create Request :' . $model->name . $value . 'Request');
+            exec('php artisan make:request ' . $model->name . $value . 'Request');
+            $content = File::get($path . '/' . $model->name . $value . 'Request.php');
+            $content = str_replace('return false;', 'return true;', $content);
+            file_put_contents($path . '/' . $model->name . $value . 'Request.php', $content);
+        }
     }
 
     public function generateMigration($model, $Stub)
@@ -408,6 +467,7 @@ class CMSGeneratorCommand extends Command
             $collection = $model->name . "Collection";
             $this->info("Create Resource " . $collection);
             exec('php artisan make:resource ' . $collection);
+            exec('php artisan make:resource ' . $model->name);
         }
     }
 

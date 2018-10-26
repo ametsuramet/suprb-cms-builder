@@ -4,9 +4,11 @@ namespace DummyNamespace;
 
 use App\Models\{{DummyModel}};
 use App\Http\Controllers\Controller;
-use App\Http\Requests\{{DummyModel}}CreateRequest;
-use App\Http\Requests\{{DummyModel}}EditRequest;
+use App\Http\Requests\{{DummyModel}}ApiCreateRequest;
+use App\Http\Requests\{{DummyModel}}ApiEditRequest;
 use Illuminate\Http\Request;
+use App\Resources\{{DummyModel}} as {{DummyModel}}Single;
+use App\Resources\{{DummyModel}}Collection;
 
 class DummyClass extends Controller
 {
@@ -23,14 +25,7 @@ class DummyClass extends Controller
      */
     public function index(Request $request)
     {
-
-        if ($request->has('search')) {
-            $data = $this->{{name}}->search($request->search)->orderBy('id', 'desc')->paginate();
-        } else {
-            $data = $this->{{name}}->orderBy('id', 'desc')->paginate(20);
-
-        }
-        return view('admin.{{name}}.index', compact('data'));
+        return {{DummyModel}}Collection::collection({{DummyModel}}::paginate());
     }
 
     /**
@@ -40,10 +35,7 @@ class DummyClass extends Controller
      */
     public function create()
     {
-        ${{name}} = $this->{{name}}->all();
-        $data = $this->{{name}};
-
-        return view('admin.{{name}}.create', compact('data', "{{name}}"));
+        abort(404);
     }
 
     /**
@@ -52,16 +44,13 @@ class DummyClass extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store({{DummyModel}}CreateRequest $request)
+    public function store({{DummyModel}}ApiCreateRequest $request)
     {
-        $input = $request->except("_token");
         try {
-            $this->{{name}}->create($input);
-            flash('{{DummyModel}} Saved')->success();
-            return redirect()->route('admin.{{name}}.index');
+            $this->{{name}}->create($request->all());
+            return response()->json(["message" => "success"]);
         } catch (\Exception $e) {
-            flash('Error :' . $e->getMessage())->error();
-            return back();
+            return response()->json(["message" => "failed"], 400);
         }
     }
 
@@ -73,8 +62,7 @@ class DummyClass extends Controller
      */
     public function show($id)
     {
-        //
-        return view('admin.{{name}}.show');
+        return {{DummyModel}}Single({{DummyModel}}::findOrFail($id));
     }
 
     /**
@@ -85,10 +73,7 @@ class DummyClass extends Controller
      */
     public function edit($id)
     {
-        //
-        ${{name}} = $this->{{name}}->all();
-        $data = $this->{{name}}->find($id);
-        return view('admin.{{name}}.edit', compact('data', '{{name}}'));
+        abort(404);
     }
 
     /**
@@ -98,18 +83,14 @@ class DummyClass extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update({{DummyModel}}UpdateRequest $request, $id)
+    public function update({{DummyModel}}ApiEditRequest $request, $id)
     {
         $this->{{name}} = $this->{{name}}->findOrFail($id);
-        $input = $request->except(["_token", "_method"]);
         try {
-
-            $this->{{name}}->update($input);
-            flash('{{DummyModel}} Saved')->success();
-            return redirect()->route('admin.{{name}}.index');
+            $this->{{name}}->update($request->all());
+            return response()->json(["message" => "success"]);
         } catch (\Exception $e) {
-            flash('Error :' . $e->getMessage())->error();
-            return back();
+            return response()->json(["message" => "failed"], 400);
         }
     }
 
@@ -123,11 +104,9 @@ class DummyClass extends Controller
     {
         try {
             $this->{{name}}->destroy($id);
-            flash('{{DummyModel}} Deleted')->success();
-            return redirect()->route('admin.{{name}}.index');
+            return response()->json(["message" => "success"]);
         } catch (\Exception $e) {
-            flash('Error :' . $e->getMessage())->error();
-            return back();
+            return response()->json(["message" => "failed"], 400);
         }
     }
 }

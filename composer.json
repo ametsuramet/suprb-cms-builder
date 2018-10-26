@@ -3,13 +3,14 @@
     "description": "CMS Builder for Laravel 5.5+",
     "type": "library",
     "require": {
-        "laravel/framework": "5.5.*",
+        "laravel/framework": ">=5.5.0",
         "jeroennoten/laravel-adminlte": "^1.24",
         "laracasts/flash": "^3.0",
         "spatie/laravel-permission": "^2.21",
         "spatie/laravel-sluggable": "^2.1",
         "unisharp/laravel-filemanager": "~1.8",
-        "tymon/jwt-auth": "1.0.*"
+        "predis/predis": ">=v1.1.0",
+        "tymon/jwt-auth": "0.5.*"
     },
     "license": "MIT",
     "autoload": {
@@ -26,7 +27,8 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Suprb\\CmsGenerator\\CmsGeneratorServiceProvider"
+                "Suprb\\CmsGenerator\\CmsGeneratorServiceProvider",
+                "'Tymon\\JWTAuth\\Providers\\JWTAuthServiceProvider'"
             ]
         }
     },
