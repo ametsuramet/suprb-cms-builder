@@ -1,8 +1,10 @@
 # suprb-cms-builder
-## INSTALL 
-```composer require ametsuramet/ametsuramet/suprb-cms-builder```
 
-##CONFIG
+## INSTALL 
+```composer require ametsuramet/suprb-cms-builder```
+
+
+## INSTALL
 ```
-php artisan --provider="Suprb\CmsGenerator\CmsGeneratorServiceProvider" vendor:publish --tag=cmsbuilder-json --force
+php artisan cms:install
 ```
