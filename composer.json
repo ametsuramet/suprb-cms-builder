@@ -3,6 +3,7 @@
     "description": "CMS Builder for Laravel 5.5+",
     "type": "library",
     "require": {
+        "laravel/framework": "5.5.*",
         "jeroennoten/laravel-adminlte": "^1.24",
         "laracasts/flash": "^3.0",
         "spatie/laravel-permission": "^2.21",
