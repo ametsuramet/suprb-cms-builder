@@ -16,6 +16,10 @@ class DummyClass extends Model
 
     {{primaryKey}}
 
+    protected $casts = [{{casts}}
+    ];
+
+
     /**
      * Attributes that should be mass-assignable.
      *
@@ -26,4 +30,10 @@ class DummyClass extends Model
     {{hidden}}
 
     {{relationships}}
+
+    public function scopeSearch($query, $value)
+    {
+        return $query->where(function ($query) use ($value) {{{searchable}}
+        });
+    }
 }

@@ -68,6 +68,9 @@ class CMSGeneratorCommand extends Command
     {
         // ADMIN LTE
         $this->info("Publish CMS-BUILDER JSON");
+        if (File::exists(base_path('cmsbuilder.json'))) {
+            File::delete(base_path('cmsbuilder.json'));
+        }
         $this->call('vendor:publish', [
             "--provider" => "Suprb\CmsGenerator\CmsGeneratorServiceProvider",
             "--tag" => "cmsbuilder-json",
@@ -349,10 +352,26 @@ class CMSGeneratorCommand extends Command
 
         $Stub = str_replace("{{table}}", str_plural(snake_case($model->name)), $Stub);
         $fillable = "[";
+        $searchable = "";
+        $casts = "";
         foreach ($model->schema as $key => $schema) {
             $fillable .= "\n\t\t'" . $schema->field . "',";
+            if ($schema->type == 'jsonb' || $schema->type == 'json') {
+                $casts .= "\n\t\t'" . $schema->field . "' => 'collection',";
+            }
+            if ($schema->searchable) {
+                if (!$key) {
+                    $searchable .= "\n\t\t\t\$query->where('" . $schema->field . "', 'like', '%' . \$value . '%');";
+                } else {
+                    $searchable .= "\n\t\t\t\$query->orWhere('" . $schema->field . "', 'like', '%' . \$value . '%');";
+                }
+            }
         }
-        $fillable .= "\n\t\t]";
+
+        $Stub = str_replace("{{searchable}}", $searchable, $Stub);
+        $Stub = str_replace("{{casts}}", $casts, $Stub);
+
+        $fillable .= "\n\t]";
         $Stub = str_replace("{{fillable}}", $fillable, $Stub);
         $Stub = str_replace("{{hidden}}", "", $Stub);
 
