@@ -28,7 +28,6 @@
         "laravel": {
             "providers": [
                 "Suprb\\CmsGenerator\\CmsGeneratorServiceProvider",
-                "'Tymon\\JWTAuth\\Providers\\JWTAuthServiceProvider'"
             ]
         }
     },
