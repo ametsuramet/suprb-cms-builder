@@ -46,7 +46,7 @@
 			{
 				"field": "publish",
 				"type": "boolean",
-				"nullable": false,
+				"nullable": true,
 				"default": "true",
 				"form_type": "radio",
 				"options": [
@@ -57,8 +57,8 @@
 			{
 				"field": "publish_country",
 				"type": "jsonb",
-				"nullable": false,
-				"default": null,
+				"nullable": true,
+				"default": "[]",
 				"form_type": "checkbox",
 				"options": [
 					{"value": 1, "label": "country 1"},

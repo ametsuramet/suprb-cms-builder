@@ -20,17 +20,21 @@ class CmsGeneratorServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        $this->publishes([
-            __DIR__ . '/../config/cmsgenerator.php' => config_path('cmsgenerator.php'),
-        ], 'cmsbuilder');
+        // $this->publishes([
+        //     __DIR__ . '/../config/cmsgenerator.php' => config_path('cmsgenerator.php'),
+        // ], 'cmsbuilder');
 
         $this->publishes([
             __DIR__ . '/cmsbuilder.json' => base_path('/cmsbuilder.json'),
         ], 'cmsbuilder-json');
 
+        // $this->publishes([
+        //     __DIR__ . '/stubs/' => base_path('resources/cms-generator/'),
+        // ], 'cmsbuilder');
+
         $this->publishes([
-            __DIR__ . '/stubs/' => base_path('resources/cms-generator/'),
-        ], 'cmsbuilder');
+            __DIR__ . '/stubs/views/auth' => resource_path('views/auth'),
+        ], 'cmsbuilder-auth-view');
     }
 
     /**

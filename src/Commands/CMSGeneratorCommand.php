@@ -66,6 +66,21 @@ class CMSGeneratorCommand extends Command
 
     public function handle()
     {
+        // ADMIN LTE
+        $this->info("Publish CMS-BUILDER JSON");
+        $this->call('vendor:publish', [
+            "--provider" => "Suprb\CmsGenerator\CmsGeneratorServiceProvider",
+            "--tag" => "cmsbuilder-json",
+            "--force" => "",
+        ]);
+
+        $this->info("Publish Auth Page");
+        $this->call('vendor:publish', [
+            "--provider" => "Suprb\CmsGenerator\CmsGeneratorServiceProvider",
+            "--tag" => "cmsbuilder-auth-view",
+            "--force" => "",
+        ]);
+
         $this->getJsonFile();
         $this->thirdParty();
 
@@ -87,22 +102,76 @@ class CMSGeneratorCommand extends Command
             $this->generateView($model);
         });
         $this->appendRouteWeb();
-
+        if ($this->confirm('Do you Automigration?')) {
+            $this->line("start migration ....");
+            $this->call('migrate');
+            $this->call('migrate', [
+                '--path' => '/database/migrations/cms',
+            ]);
+            $this->info("Migration Succeed");
+            \DB::table('users')->where('email', 'admin@admin')->delete();
+            \App\User::create([
+                'id' => 1,
+                'name' => 'admin',
+                'email' => 'admin@admin',
+                'password' => bcrypt('admin'),
+            ]);
+        }
     }
 
     public function thirdParty()
     {
         // ADMIN LTE
+        $this->info("Publish AdminLTE Assets");
         $this->call('vendor:publish', [
             "--provider" => "JeroenNoten\LaravelAdminLte\ServiceProvider",
             "--tag" => "assets",
             "--force" => "",
         ]);
+
+        $this->info("Publish AdminLTE Views");
+        $this->call('vendor:publish', [
+            "--provider" => "JeroenNoten\LaravelAdminLte\ServiceProvider",
+            "--tag" => "views",
+            "--force" => "",
+        ]);
+        $this->info("Publish AdminLTE Config");
         $this->call('vendor:publish', [
             "--provider" => "JeroenNoten\LaravelAdminLte\ServiceProvider",
             "--tag" => "config",
             "--force" => "",
         ]);
+
+        $adminlte = File::get(__DIR__ . '/../stubs/adminlte.stub');
+        $mainNavigation = "";
+
+        foreach ($this->models as $key => $model) {
+            # code...
+            $mainNavigation .= "\t\t[\n";
+            $mainNavigation .= "\t\t\t'text' => '" . $model->name . "',\n";
+            $mainNavigation .= "\t\t\t'url'  => 'admin/" . str_plural(snake_case($model->name)) . "',\n";
+            $mainNavigation .= "\t\t],\n";
+        }
+        $adminlte = str_replace("{{mainNavigation}}", $mainNavigation, $adminlte);
+        file_put_contents(config_path('adminlte.php'), $adminlte);
+
+        //LARACAST FLASH
+        $this->info("Publish LARACAST FLASH");
+        $this->call('vendor:publish', [
+            "--provider" => "Laracasts\Flash\FlashServiceProvider",
+            "--force" => "",
+        ]);
+
+        $this->info("Publish LARACAST PERMISSION Config");
+        $this->call('vendor:publish', [
+            "--provider" => "Spatie\Permission\PermissionServiceProvider",
+            "--tag" => "config",
+            "--force" => "",
+        ]);
+
+        $model_user = File::get(__DIR__ . '/../stubs/UserModel.stub');
+
+        file_put_contents(app_path('User.php'), $model_user);
 
         $middleware_content = File::get($this->middleware_path);
         $middleware_replace = "protected \$routeMiddleware = [
@@ -120,6 +189,17 @@ class CMSGeneratorCommand extends Command
     ];";
         $middleware_content = str_replace($this->middleware_string, $middleware_replace, $middleware_content);
         file_put_contents($this->middleware_path, $middleware_content);
+
+        //SPATIE JWT AUTH
+        $this->info("Config  jwt-auth secret");
+        $this->call('jwt:secret');
+
+        //SPATIE JWT AUTH
+        $this->info("Publish  jwt-auth");
+        $this->call('vendor:publish', [
+            "--provider" => "Tymon\JWTAuth\Providers\LaravelServiceProvider",
+            "--force" => "",
+        ]);
     }
 
     public function appendRouteWeb()
@@ -185,6 +265,15 @@ class CMSGeneratorCommand extends Command
 
             file_put_contents($this->view_path . str_plural(snake_case($model->name)) . "/" . $key . ".blade.php", $Stub);
         }
+        //CREATE CONTROLLER FOLDER
+        File::makeDirectory($this->view_path . "/misc/", $mode = 0777, true, true);
+        $alert = File::get(__DIR__ . '/../stubs/views/alert.stub');
+        file_put_contents($this->view_path . "/misc/alert.blade.php", $alert);
+        $homeController = File::get(__DIR__ . '/../stubs/HomeController.stub');
+        file_put_contents($this->controller_path . "HomeController.php", $homeController);
+        $homeView = File::get(__DIR__ . '/../stubs/views/home.stub');
+        file_put_contents(resource_path('views/home.blade.php'), $homeView);
+
     }
 
     public function generateController($model, $Stub)
