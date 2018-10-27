@@ -83,7 +83,7 @@ class DummyClass extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update({{DummyModel}}ApiEditRequest $request, $id)
+    public function update({{DummyModel}}ApiUpdateRequest $request, $id)
     {
         $this->{{name}} = $this->{{name}}->findOrFail($id);
         try {

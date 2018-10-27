@@ -340,7 +340,7 @@ class CMSGeneratorCommand extends Command
     public function generateRequest($model)
     {
         $path = app_path('Http/Requests');
-        foreach (["Create", "Edit", "ApiCreate", "ApiEdit"] as $key => $value) {
+        foreach (["Create", "Update", "ApiCreate", "ApiUpdate"] as $key => $value) {
             $this->info('Create Request :' . $model->name . $value . 'Request');
             exec('php artisan make:request ' . $model->name . $value . 'Request');
             $content = File::get($path . '/' . $model->name . $value . 'Request.php');
