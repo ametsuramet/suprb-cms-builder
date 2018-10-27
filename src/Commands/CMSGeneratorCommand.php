@@ -4,6 +4,7 @@ namespace Suprb\CmsGenerator\Commands;
 
 use File;
 use Illuminate\Console\Command;
+use Spatie\Permission\Models\Permission;
 
 class CMSGeneratorCommand extends Command
 {
@@ -47,6 +48,14 @@ class CMSGeneratorCommand extends Command
     protected function getMigrationStub()
     {
         return __DIR__ . '/../stubs/migration.stub';
+    }
+    protected function getMigrationAddProviderStub()
+    {
+        return __DIR__ . '/../stubs/add-provider.stub';
+    }
+    protected function getMigrationPermissionStub()
+    {
+        return __DIR__ . '/../stubs/permission.stub';
     }
     protected function getControllerStub()
     {
@@ -99,7 +108,15 @@ class CMSGeneratorCommand extends Command
 
         $this->getJsonFile();
         $this->thirdParty();
+        app()['cache']->forget('spatie.permission.cache');
 
+        //php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider" --tag="migrations"
+        // $this->info("Create Permission DB");
+        // $this->call('vendor:publish', [
+        //     "--provider" => "Spatie\Permission\PermissionServiceProvider",
+        //     "--tag" => "migrations",
+        //     "--force" => "",
+        // ]);
         //CREATE MODEL FOLDER
         File::makeDirectory($this->model_path, $mode = 0777, true, true);
         //CREATE MIGRATION FOLDER
@@ -122,6 +139,11 @@ class CMSGeneratorCommand extends Command
         });
         $this->appendRouteWeb();
         $this->appendRouteApi();
+
+        $add_provider = File::get($this->getMigrationAddProviderStub());
+        $permission = File::get($this->getMigrationPermissionStub());
+        file_put_contents(database_path('migrations/2018_10_27_150248_add_provider_id.php'), $add_provider);
+        file_put_contents(database_path('migrations/2018_10_27_145043_create_permission_tables.php'), $permission);
         if ($this->confirm('Do Automigration?')) {
             $this->line("start migration ....");
             $this->call('migrate');
@@ -136,10 +158,22 @@ class CMSGeneratorCommand extends Command
                 'email' => 'admin@admin',
                 'password' => bcrypt('admin'),
             ]);
+            $this->models->each(function ($model) {
+                $this->generatePermission($model);
+            });
+
         }
 
         exec('composer dump-autoload');
         $this->alert("DONE");
+    }
+
+    public function generatePermission($model)
+    {
+        Permission::create(['name' => 'read ' . str_plural(snake_case($model->name))]);
+        Permission::create(['name' => 'update ' . str_plural(snake_case($model->name))]);
+        Permission::create(['name' => 'delete ' . str_plural(snake_case($model->name))]);
+        Permission::create(['name' => 'menu ' . str_plural(snake_case($model->name))]);
     }
 
     public function thirdParty()

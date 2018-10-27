@@ -10,6 +10,7 @@
         "spatie/laravel-sluggable": "^2.1",
         "unisharp/laravel-filemanager": "~1.8",
         "predis/predis": ">=v1.1.0",
+        "laravel/socialite": ">=v3.0.0",
         "tymon/jwt-auth": "1.0.*"
     },
     "license": "MIT",
