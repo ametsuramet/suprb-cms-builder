@@ -78,15 +78,15 @@ class CMSGeneratorCommand extends Command
     {
         $this->alert("SUPRB CMS BUILDER by @ametsuramet");
         // ADMIN LTE
-        $this->info("Publish CMS-BUILDER JSON");
-        if (File::exists(base_path('cmsbuilder.json'))) {
-            File::delete(base_path('cmsbuilder.json'));
-        }
-        $this->call('vendor:publish', [
-            "--provider" => "Suprb\CmsGenerator\CmsGeneratorServiceProvider",
-            "--tag" => "cmsbuilder-json",
-            "--force" => "",
-        ]);
+        // $this->info("Publish CMS-BUILDER JSON");
+        // if (File::exists(base_path('cmsbuilder.json'))) {
+        //     File::delete(base_path('cmsbuilder.json'));
+        // }
+        // $this->call('vendor:publish', [
+        //     "--provider" => "Suprb\CmsGenerator\CmsGeneratorServiceProvider",
+        //     "--tag" => "cmsbuilder-json",
+        //     "--force" => "",
+        // ]);
 
         $this->info("Publish Auth Page");
         $this->call('vendor:publish', [

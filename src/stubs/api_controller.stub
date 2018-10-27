@@ -25,7 +25,7 @@ class DummyClass extends Controller
      */
     public function index(Request $request)
     {
-        return {{DummyModel}}Collection::collection({{DummyModel}}::paginate());
+        return {{DummyModel}}Collection::collection($this->{{name}}->paginate());
     }
 
     /**
@@ -62,7 +62,7 @@ class DummyClass extends Controller
      */
     public function show($id)
     {
-        return {{DummyModel}}Single({{DummyModel}}::findOrFail($id));
+        return {{DummyModel}}Single($this->{{name}}->findOrFail($id));
     }
 
     /**
