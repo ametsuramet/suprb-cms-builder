@@ -9,7 +9,7 @@ composer require "ametsuramet/suprb-cms-builder:dev-master"
 ## PUBLISH CMS JSON FILE
 
 ```php
-php artisan vendor:publish --provider=Suprb\CmsGenerator\CmsGeneratorServiceProvider --tag=cmsbuilder-json --force
+php artisan vendor:publish --tag=cmsbuilder-json --force
 ``` 
 
 ## USE
