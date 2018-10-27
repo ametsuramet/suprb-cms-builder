@@ -8,7 +8,7 @@ composer require "ametsuramet/suprb-cms-builder:dev-master"
 
 ## PUBLISH CMS JSON FILE
 
-```php
+```bash
 php artisan vendor:publish --tag=cmsbuilder-json --force
 ``` 
 
@@ -92,8 +92,19 @@ edit _cmsbuilder.json_
 
 ## USE
 Generate CMS
-```php
+```bash
 php artisan cms:install
+```
+
+### RUN SERVER
+```bash
+php artisan server
+```
+[login CMS](http://localhost:8000/login)
+use this credential
+```bash
+username: admin@admin
+password: admin
 ```
 
 ### TODO
@@ -106,6 +117,7 @@ php artisan cms:install
 - [x] REQUEST
 - [x] PERMISSION
 - [x] JWT-Support
+- [ ] Datatables-Support
 - [ ] Swagger-Support
 - [ ] Faker
 - [ ] Socialite
