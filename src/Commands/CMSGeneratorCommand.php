@@ -95,6 +95,8 @@ class CMSGeneratorCommand extends Command
             "--force" => "",
         ]);
 
+        $this->call('storage:link');
+
         $this->getJsonFile();
         $this->thirdParty();
 
@@ -268,7 +270,14 @@ class CMSGeneratorCommand extends Command
                     $formItems .= "\n\t\t\t\t<div class='form-group'>";
                     $formItems .= "\n\t\t\t\t\t\t<label for=''>" . ucwords($field) . "</label>";
 
-                    if ($schema->form_type == 'radio' || $schema->form_type == 'checkbox') {
+                    if ($schema->form_type == 'file') {
+                        $formItems .= "\n\t\t\t\t\t\t<input name='" . $schema->field . "' type='" . $schema->form_type . "' />";
+                        $formItems .= "\n\t\t\t\t\t\t<input name='" . $schema->field . "' type='hidden' class='form-control' value='{!! \$edit ? \$data->" . $schema->field . " : null !!}' />";
+                        $formItems .= "\n\t\t\t\t\t\t@if(\$edit)";
+                        $formItems .= "\n\t\t\t\t\t\t<br><label>Preview</label><br>";
+                        $formItems .= "\n\t\t\t\t\t\t<img src='{!! \$edit ? Storage::url(\$data->" . $schema->field . ") : \"/images/notfound.jpeg\" !!}' width='300' onerror=\"this.src='/images/notfound.jpeg';\" />";
+                        $formItems .= "\n\t\t\t\t\t\t@endif";
+                    } else if ($schema->form_type == 'radio' || $schema->form_type == 'checkbox') {
                         foreach ($schema->options as $option) {
                             $formItems .= "\n\t\t\t\t\t\t<input name='" . $schema->field . "' type='" . $schema->form_type . "' value='" . $option->value . "' /> " . $option->label;
                         }
@@ -294,7 +303,11 @@ class CMSGeneratorCommand extends Command
                 foreach ($model->schema as $schema) {
                     $field = implode(" ", (explode("_", $schema->field)));
                     $tableHeader .= "\n\t\t\t\t\t\t\t\t<th>" . ucwords($field) . "</th>";
-                    $tableBody .= "\n\t\t\t\t\t\t\t\t\t<td>{!! \$d->" . $schema->field . " !!}</td>";
+                    if ($schema->form_type == 'file') {
+                        $tableBody .= "\n\t\t\t\t\t\t\t\t\t<td><img src='{!! Storage::url(\$d->" . $schema->field . ") !!}' width='150' onerror=\"this.src='/images/notfound.jpeg';\" /></td>";
+                    } else {
+                        $tableBody .= "\n\t\t\t\t\t\t\t\t\t<td>{!! \$d->" . $schema->field . " !!}</td>";
+                    }
                 }
                 $Stub = str_replace("{{tableHeader}}", $tableHeader, $Stub);
                 $Stub = str_replace("{{tableBody}}", $tableBody, $Stub);
@@ -317,10 +330,20 @@ class CMSGeneratorCommand extends Command
 
     public function generateController($model, $Stub)
     {
+        $upload = "";
+        foreach ($model->schema as $key => $schema) {
+            if ($schema->form_type == 'file') {
+                $upload .= "\n\t\t\tif(\$request->hasFile('" . $schema->field . "')) {";
+                $upload .= "\n\t\t\t\$path = \$request->" . $schema->field . "->store('images', env('FILESYSTEM_DRIVER', 'public'));";
+                $upload .= "\n\t\t\t\$input['" . $schema->field . "'] = \$path;";
+                $upload .= "\n\t\t\t}";
+            }
+        }
         $Stub = str_replace("DummyClass", $model->name . 'Controller', $Stub);
         $Stub = str_replace("DummyNamespace", 'App\Http\Controllers\Admin', $Stub);
         $Stub = str_replace("{{DummyModel}}", $model->name, $Stub);
         $Stub = str_replace("{{name}}", str_plural(snake_case($model->name)), $Stub);
+        $Stub = str_replace("{{upload}}", $upload, $Stub);
         $this->info('Create Controller Admin :' . $this->controller_path . $model->name . 'Controller.php');
 
         file_put_contents($this->controller_path . $model->name . 'Controller.php', $Stub);
@@ -360,8 +383,8 @@ class CMSGeneratorCommand extends Command
             if ($schema->nullable) {
                 $fields .= "->nullable()";
             }
-            if ($schema->default) {
-                $fields .= "->default(" . ($schema->default == 'NULL' || $schema->default == 'true' || $schema->default == 'false' ? $schema->default : "'" . $schema->default . "'") . ")";
+            if ($schema->default && current($type) != 'jsonb' && current($type) != 'text' && current($type) != 'json' && current($type) != 'geometry') {
+                $fields .= "->default(" . (strtolower($schema->default) == 'null' || strtolower($schema->default) == 'true' || strtolower($schema->default) == 'false' ? $schema->default : "'" . $schema->default . "'") . ")";
             }
             if (in_array("unsigned", $type)) {
                 $fields .= "->unsigned()";

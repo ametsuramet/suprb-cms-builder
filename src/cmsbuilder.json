@@ -27,6 +27,15 @@
 				"options": []
 			},
 			{
+				"field": "picture",
+				"type": "string",
+				"nullable": true,
+				"searchable": false,
+				"default": "NULL",
+				"form_type": "file",
+				"options": []
+			},
+			{
 				"field": "author_id",
 				"type": "integer:unsigned",
 				"nullable": true,
