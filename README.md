@@ -3,7 +3,7 @@
 ## INSTALL 
 **So easy to install!** Install globally with composer:
 ```bash
-composer require "ametsuramet/suprb-cms-builder"
+composer require "ametsuramet/suprb-cms-builder:dev-master"
 ```
 
 ## PUBLISH CMS JSON FILE
