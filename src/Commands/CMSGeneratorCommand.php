@@ -300,33 +300,42 @@ class CMSGeneratorCommand extends Command
             if ($key == 'form') {
                 $formItems = "";
                 foreach ($model->schema as $schema) {
-                    $field = implode(" ", (explode("_", $schema->field)));
-                    $formItems .= "\n\t\t\t\t<div class='form-group'>";
-                    $formItems .= "\n\t\t\t\t\t\t<label for=''>" . ucwords($field) . "</label>";
-
-                    if ($schema->form_type == 'file') {
-                        $formItems .= "\n\t\t\t\t\t\t<input name='" . $schema->field . "' type='" . $schema->form_type . "' />";
-                        $formItems .= "\n\t\t\t\t\t\t<input name='" . $schema->field . "' type='hidden' class='form-control' value='{!! \$edit ? \$data->" . $schema->field . " : null !!}' />";
-                        $formItems .= "\n\t\t\t\t\t\t@if(\$edit)";
-                        $formItems .= "\n\t\t\t\t\t\t<br><label>Preview</label><br>";
-                        $formItems .= "\n\t\t\t\t\t\t<img src='{!! \$edit ? Storage::url(\$data->" . $schema->field . ") : \"/images/notfound.jpeg\" !!}' width='300' onerror=\"this.src='/images/notfound.jpeg';\" />";
-                        $formItems .= "\n\t\t\t\t\t\t@endif";
-                    } else if ($schema->form_type == 'radio' || $schema->form_type == 'checkbox') {
-                        foreach ($schema->options as $option) {
-                            $formItems .= "\n\t\t\t\t\t\t<input name='" . $schema->field . "' type='" . $schema->form_type . "' value='" . $option->value . "' /> " . $option->label;
+                    $hide_form = false;
+                    if (isset($schema->hide_form)) {
+                        if ($schema->hide_form) {
+                            $hide_form = true;
                         }
-                    } else if ($schema->form_type == 'textarea') {
-                        $formItems .= "\n\t\t\t\t\t\t<textarea name='" . $schema->field . "'  class='form-control' rows='5'>{!! \$edit ? \$data->" . $schema->field . " : null !!}</textarea>";
-                    } else if ($schema->form_type == 'select') {
-                        $formItems .= "\n\t\t\t\t\t\t<select name='" . $schema->field . "'  class='form-control'>";
-                        foreach ($schema->options as $option) {
-                            $formItems .= "\n\t\t\t\t\t\t\t\t<option value='" . $option->value . "' >" . $option->label . "</option>";
-                        }
-                        $formItems .= "\n\t\t\t\t\t\t</select>";
-                    } else {
-                        $formItems .= "\n\t\t\t\t\t\t<input name='" . $schema->field . "' type='" . $schema->form_type . "' class='form-control' value='{!! \$edit ? \$data->" . $schema->field . " : null !!}' />";
                     }
-                    $formItems .= "\n\t\t\t\t</div>";
+                    if (!$hide_form) {
+                        $field = implode(" ", (explode("_", $schema->field)));
+                        $formItems .= "\n\t\t\t\t<div class='form-group'>";
+                        $formItems .= "\n\t\t\t\t\t\t<label for=''>" . ucwords($field) . "</label>";
+
+                        if ($schema->form_type == 'file') {
+                            $formItems .= "\n\t\t\t\t\t\t<input name='" . $schema->field . "' type='" . $schema->form_type . "' />";
+                            $formItems .= "\n\t\t\t\t\t\t<input name='" . $schema->field . "' type='hidden' class='form-control' value='{!! \$edit ? \$data->" . $schema->field . " : null !!}' />";
+                            $formItems .= "\n\t\t\t\t\t\t@if(\$edit)";
+                            $formItems .= "\n\t\t\t\t\t\t<br><label>Preview</label><br>";
+                            $formItems .= "\n\t\t\t\t\t\t<img src='{!! \$edit ? Storage::url(\$data->" . $schema->field . ") : \"/images/notfound.jpeg\" !!}' width='300' onerror=\"this.src='/images/notfound.jpeg';\" />";
+                            $formItems .= "\n\t\t\t\t\t\t@endif";
+                        } else if ($schema->form_type == 'radio' || $schema->form_type == 'checkbox') {
+                            foreach ($schema->options as $option) {
+                                $formItems .= "\n\t\t\t\t\t\t<input name='" . $schema->field . "' type='" . $schema->form_type . "' value='" . $option->value . "' {!! \$edit ? \$data->" . $schema->field . " == '" . $option->value . "' ? 'CHECKED' : null : null !!} /> " . $option->label;
+                            }
+                        } else if ($schema->form_type == 'textarea') {
+                            $formItems .= "\n\t\t\t\t\t\t<textarea name='" . $schema->field . "'  class='form-control' rows='5'>{!! \$edit ? \$data->" . $schema->field . " : null !!}</textarea>";
+                        } else if ($schema->form_type == 'select') {
+                            $formItems .= "\n\t\t\t\t\t\t<select name='" . $schema->field . "'  class='form-control'>";
+                            $formItems .= "\n\t\t\t\t\t\t\t\t<option value='' >Select First</option>";
+                            foreach ($schema->options as $option) {
+                                $formItems .= "\n\t\t\t\t\t\t\t\t<option value='" . $option->value . "' {!! \$edit ? \$data->" . $schema->field . " == '" . $option->value . "' ? 'SELECTED' : null : null !!}>" . $option->label . "</option>";
+                            }
+                            $formItems .= "\n\t\t\t\t\t\t</select>";
+                        } else {
+                            $formItems .= "\n\t\t\t\t\t\t<input name='" . $schema->field . "' type='" . $schema->form_type . "' class='form-control' value='{!! \$edit ? \$data->" . $schema->field . " : null !!}' />";
+                        }
+                        $formItems .= "\n\t\t\t\t</div>";
+                    }
                 }
                 $Stub = str_replace("{{formItems}}", $formItems, $Stub);
 
@@ -335,12 +344,20 @@ class CMSGeneratorCommand extends Command
                 $tableHeader = "";
                 $tableBody = "";
                 foreach ($model->schema as $schema) {
+                    $hide_column = false;
+                    if (isset($schema->hide_column)) {
+                        if ($schema->hide_column) {
+                            $hide_column = true;
+                        }
+                    }
+                    if (!$hide_column) {
                     $field = implode(" ", (explode("_", $schema->field)));
                     $tableHeader .= "\n\t\t\t\t\t\t\t\t<th>" . ucwords($field) . "</th>";
-                    if ($schema->form_type == 'file') {
-                        $tableBody .= "\n\t\t\t\t\t\t\t\t\t<td><img src='{!! Storage::url(\$d->" . $schema->field . ") !!}' width='150' onerror=\"this.src='/images/notfound.jpeg';\" /></td>";
-                    } else {
-                        $tableBody .= "\n\t\t\t\t\t\t\t\t\t<td>{!! \$d->" . $schema->field . " !!}</td>";
+                        if ($schema->form_type == 'file') {
+                            $tableBody .= "\n\t\t\t\t\t\t\t\t\t<td><img src='{!! Storage::url(\$d->" . $schema->field . ") !!}' width='150' onerror=\"this.src='/images/notfound.jpeg';\" /></td>";
+                        } else {
+                            $tableBody .= "\n\t\t\t\t\t\t\t\t\t<td>{!! \$d->" . $schema->field . " !!}</td>";
+                        }    
                     }
                 }
                 $Stub = str_replace("{{tableHeader}}", $tableHeader, $Stub);
@@ -408,7 +425,11 @@ class CMSGeneratorCommand extends Command
 
     public function generateMigration($model, $Stub)
     {
-        $Stub = str_replace("DummyClass", 'Create' . str_plural($model->name) . 'Table', $Stub);
+        $class_name = str_plural($model->name);
+        if (isset($model->class_name)) {
+            $class_name = $model->class_name;
+        }
+        $Stub = str_replace("DummyClass", 'Create' . $class_name . 'Table', $Stub);
         $Stub = str_replace("{{table}}", str_plural(snake_case($model->name)), $Stub);
         $fields = "";
         foreach ($model->schema as $key => $schema) {
@@ -467,6 +488,13 @@ class CMSGeneratorCommand extends Command
         }
 
         $Stub = str_replace("{{table}}", str_plural(snake_case($model->name)), $Stub);
+        if (isset($model->mongo)) {
+            if ($model->mongo) {
+                $Stub = str_replace("use Illuminate\Database\Eloquent\Model;", 'use Jenssegers\Mongodb\Eloquent\Model;', $Stub);
+                $Stub = str_replace("{{connection}}", "protected \$connection = 'mongodb';\n", $Stub);
+            }
+        }
+        $Stub = str_replace("{{connection}}", "\n", $Stub);
         $fillable = "[";
         $searchable = "";
         $casts = "";
