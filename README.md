@@ -1,14 +1,14 @@
 # suprb-cms-builder
 
 ## INSTALL 
-**So easy to install!** Install globally with composer:
+**So easy to install!** Install with composer:
 ```bash
 composer require "ametsuramet/suprb-cms-builder:dev-master"
 ```
 
 ## PUBLISH CMS JSON FILE
 
-```bash
+```php
 php artisan vendor:publish --tag=cmsbuilder-json --force
 ``` 
 
@@ -92,19 +92,8 @@ edit _cmsbuilder.json_
 
 ## USE
 Generate CMS
-```bash
-php artisan cms:install
-```
-
-### RUN SERVER
-```bash
-php artisan server
-```
-[login CMS](http://localhost:8000/login)
-use this credential
-```bash
-username: admin@admin
-password: admin
+```php
+php artisan cms:generate
 ```
 
 ### TODO
@@ -117,8 +106,17 @@ password: admin
 - [x] REQUEST
 - [x] PERMISSION
 - [x] JWT-Support
-- [ ] Datatables-Support
 - [ ] Swagger-Support
 - [ ] Faker
 - [ ] Socialite
 - [ ] Update Feature
+
+### CREDITS
+-  [Laravel-AdminLTE](https://github.com/jeroennoten/Laravel-AdminLTE).
+-  [Laracast Flash](https://github.com/laracasts/flash).
+-  [Laravel Permission](https://github.com/spatie/laravel-permission).
+-  [Laravel Sluggable](https://github.com/spatie/laravel-sluggable).
+-  [Unisharp Laravel Filemanager](https://github.com/unisharp/laravel-filemanager).
+-  [Predis](https://github.com/nrk/predis).
+-  [Laravel Socialite](https://github.com/laravel/socialite).
+-  [Laravel JWT Auth](https://github.com/tymondesigns/jwt-auth).
