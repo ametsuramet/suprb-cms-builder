@@ -20,7 +20,10 @@ class DummyClass extends Model
     protected $casts = [{{casts}}
     ];
 
-
+    protected $dates = [{{dates}}
+        'created_at',
+        'updated_at',
+    ];
     /**
      * Attributes that should be mass-assignable.
      *

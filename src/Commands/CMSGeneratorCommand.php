@@ -8,7 +8,7 @@ use Spatie\Permission\Models\Permission;
 
 class CMSGeneratorCommand extends Command
 {
-    protected $signature = 'cms:install';
+    protected $signature = 'cms:generate';
     protected $description = 'Install Generate CMS Generator';
     private $models;
     private $migration_path;
@@ -131,11 +131,20 @@ class CMSGeneratorCommand extends Command
         $MigrationStub = File::get($this->getMigrationStub());
         $ControllerStub = File::get($this->getControllerStub());
         $this->models->each(function ($model) use ($ModelStub, $MigrationStub, $ControllerStub) {
+            $show_menu = 1;
+            if (isset($model->menu)) {
+                if (!$model->menu) {
+                    $show_menu = 0;
+                }
+            }
             $this->generateModel($model, $ModelStub);
             $this->generateMigration($model, $MigrationStub);
             $this->generateController($model, $ControllerStub);
-            $this->generateView($model);
             $this->generateRequest($model);
+
+            if ($show_menu) {
+                $this->generateView($model);
+            }
         });
         $this->appendRouteWeb();
         $this->appendRouteApi();
@@ -203,11 +212,19 @@ class CMSGeneratorCommand extends Command
         $mainNavigation = "";
 
         foreach ($this->models as $key => $model) {
-            # code...
-            $mainNavigation .= "\t\t[\n";
-            $mainNavigation .= "\t\t\t'text' => '" . $model->name . "',\n";
-            $mainNavigation .= "\t\t\t'url'  => 'admin/" . str_plural(snake_case($model->name)) . "',\n";
-            $mainNavigation .= "\t\t],\n";
+            $show_menu = 1;
+            if (isset($model->menu)) {
+                if (!$model->menu) {
+                    $show_menu = 0;
+                }
+            }
+
+            if ($show_menu) {
+                $mainNavigation .= "\t\t[\n";
+                $mainNavigation .= "\t\t\t'text' => '" . $model->name . "',\n";
+                $mainNavigation .= "\t\t\t'url'  => 'admin/" . str_plural(snake_case($model->name)) . "',\n";
+                $mainNavigation .= "\t\t],\n";
+            }
         }
         $adminlte = str_replace("{{mainNavigation}}", $mainNavigation, $adminlte);
         file_put_contents(config_path('adminlte.php'), $adminlte);
@@ -331,6 +348,8 @@ class CMSGeneratorCommand extends Command
                                 $formItems .= "\n\t\t\t\t\t\t\t\t<option value='" . $option->value . "' {!! \$edit ? \$data->" . $schema->field . " == '" . $option->value . "' ? 'SELECTED' : null : null !!}>" . $option->label . "</option>";
                             }
                             $formItems .= "\n\t\t\t\t\t\t</select>";
+                        } elseif ($schema->form_type == "datetime-local") {
+                            $formItems .= "\n\t\t\t\t\t\t<input name='" . $schema->field . "' type='" . $schema->form_type . "' class='form-control' value='{!! \$edit ? \$data->" . $schema->field . " ? \$data->" . $schema->field . "->format(\"Y-m-d\TH:i\") : null : null !!}' />";
                         } else {
                             $formItems .= "\n\t\t\t\t\t\t<input name='" . $schema->field . "' type='" . $schema->form_type . "' class='form-control' value='{!! \$edit ? \$data->" . $schema->field . " : null !!}' />";
                         }
@@ -353,7 +372,9 @@ class CMSGeneratorCommand extends Command
                     if (!$hide_column) {
                     $field = implode(" ", (explode("_", $schema->field)));
                     $tableHeader .= "\n\t\t\t\t\t\t\t\t<th>" . ucwords($field) . "</th>";
-                        if ($schema->form_type == 'file') {
+                        if ($schema->type == 'boolean') { 
+                            $tableBody .= "\n\t\t\t\t\t\t\t\t\t<td>{!! \$d->" . $schema->field . " ? '<span class=\'glyphicon glyphicon-ok-sign text-success\'></span>' : '<span class=\'glyphicon glyphicon-remove-sign text-danger\'></span>' !!}</td>";
+                        } else if ($schema->form_type == 'file') {
                             $tableBody .= "\n\t\t\t\t\t\t\t\t\t<td><img src='{!! Storage::url(\$d->" . $schema->field . ") !!}' width='150' onerror=\"this.src='/images/notfound.jpeg';\" /></td>";
                         } else {
                             $tableBody .= "\n\t\t\t\t\t\t\t\t\t<td>{!! \$d->" . $schema->field . " !!}</td>";
@@ -434,7 +455,15 @@ class CMSGeneratorCommand extends Command
         $fields = "";
         foreach ($model->schema as $key => $schema) {
             $type = explode(":", $schema->type);
-            $fields .= "\n\t\t\t\$table->" . current($type) . "('" . $schema->field . "')";
+            if(current($type) == 'float' || current($type) == 'double' || current($type) == 'decimal') {
+                $length = '10, 2';
+                if (isset($type[1])) {
+                    $length = $type[1];
+                }
+                $fields .= "\n\t\t\t\$table->" . current($type) . "('" . $schema->field . "', ".$length.")";
+            } else {
+                $fields .= "\n\t\t\t\$table->" . current($type) . "('" . $schema->field . "')";
+            }
             if ($schema->nullable) {
                 $fields .= "->nullable()";
             }
@@ -446,6 +475,9 @@ class CMSGeneratorCommand extends Command
             }
 
             $fields .= ";";
+        }
+        if ($model->softdelete) {
+            $fields .= "\n\t\t\t\$table->softDeletes();";
         }
         // $fields .= "\n\t\t$table->" . $schema->field . "('" . $schema->field . "')";
 
@@ -498,10 +530,30 @@ class CMSGeneratorCommand extends Command
         $fillable = "[";
         $searchable = "";
         $casts = "";
+        $dates = "";
         foreach ($model->schema as $key => $schema) {
             $fillable .= "\n\t\t'" . $schema->field . "',";
-            if ($schema->type == 'jsonb' || $schema->type == 'json') {
-                $casts .= "\n\t\t'" . $schema->field . "' => 'collection',";
+            switch ($schema->type) {
+                case 'jsonb':
+                case 'json':
+                    $casts .= "\n\t\t'" . $schema->field . "' => 'collection',";
+                    break;
+                case 'float':
+                    $casts .= "\n\t\t'" . $schema->field . "' => 'float',";
+                    break;
+                case 'integer':
+                    $casts .= "\n\t\t'" . $schema->field . "' => 'integer',";
+                    break;
+                case 'boolean':
+                    $casts .= "\n\t\t'" . $schema->field . "' => 'boolean',";
+                    break;
+                case 'dateTime':
+                    $casts .= "\n\t\t'" . $schema->field . "' => 'datetime',";
+                    $dates .= "\n\t\t'" . $schema->field . "',";
+                    break;
+                default:
+                    $casts .= "\n\t\t'" . $schema->field . "' => 'string',";
+                    break;
             }
             if ($schema->searchable) {
                 if (!$key) {
@@ -514,6 +566,7 @@ class CMSGeneratorCommand extends Command
 
         $Stub = str_replace("{{searchable}}", $searchable, $Stub);
         $Stub = str_replace("{{casts}}", $casts, $Stub);
+        $Stub = str_replace("{{dates}}", $dates, $Stub);
 
         $fillable .= "\n\t]";
         $Stub = str_replace("{{fillable}}", $fillable, $Stub);
