@@ -34,6 +34,7 @@ class DummyClass extends Model
     {{hidden}}
 
     {{relationships}}
+    {{custom_function}}
 
     public function scopeSearch($query, $value)
     {

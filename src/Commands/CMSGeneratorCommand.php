@@ -519,14 +519,23 @@ class CMSGeneratorCommand extends Command
             $Stub = str_replace("{{useSoftDeletes}}", "", $Stub);
         }
 
+        $custom_function = "";
         $Stub = str_replace("{{table}}", str_plural(snake_case($model->name)), $Stub);
         if (isset($model->mongo)) {
             if ($model->mongo) {
                 $Stub = str_replace("use Illuminate\Database\Eloquent\Model;", 'use Jenssegers\Mongodb\Eloquent\Model;', $Stub);
                 $Stub = str_replace("{{connection}}", "protected \$connection = 'mongodb';\n", $Stub);
+                if ($model->primaryKey == "_id") {
+                    $custom_function .= "\n\tpublic function getIdAttribute(\$value = null)";
+                    $custom_function .= "\n\t{";
+                    $custom_function .= "\n\t\treturn new \MongoDB\BSON\ObjectId(\$this->attributes['_id']);";
+                    $custom_function .= "\n\t}";
+                }
+
             }
         }
         $Stub = str_replace("{{connection}}", "\n", $Stub);
+        $Stub = str_replace("{{custom_function}}", $custom_function, $Stub);
         $fillable = "[";
         $searchable = "";
         $casts = "";
@@ -581,20 +590,35 @@ class CMSGeneratorCommand extends Command
             $relationships = "";
             foreach ($model->relations as $relation) {
                 $relationships .= "\n\tpublic function ";
+                $class_name = snake_case($relation->target);
+                if ($relation->type == "has_many") {
+                    $class_name = str_plural(snake_case($relation->target));
+                }
+                if (isset($relation->class_name)) {
+                    $class_name = $relation->class_name;
+                }
                 if ($relation->type == 'belongs_to') {
-                    $relationships .= snake_case($relation->target) . "()";
+                    $relation_key = "";
+                    if (isset($relation->foreign_key) && isset($relation->other_key)) {
+                        $relation_key = ", '" . $relation->foreign_key . "', '" . $relation->other_key . "'";
+                    }
+                    $relationships .= $class_name . "()";
                     $relationships .= "\n\t{";
-                    $relationships .= "\n\t\treturn \$this->belongsTo(" . $relation->target . "::class);";
+                    $relationships .= "\n\t\treturn \$this->belongsTo(" . $relation->target . "::class" . $relation_key . ");";
+                }
+                $relation_key = "";
+                if (isset($relation->foreign_key) && isset($relation->local_key)) {
+                    $relation_key = ", '" . $relation->foreign_key . "', '" . $relation->local_key . "'";
                 }
                 if ($relation->type == 'has_many') {
-                    $relationships .= str_plural(snake_case($relation->target)) . "()";
+                    $relationships .= $class_name . "()";
                     $relationships .= "\n\t{";
-                    $relationships .= "\n\t\treturn \$this->hasMany(" . $relation->target . "::class);";
+                    $relationships .= "\n\t\treturn \$this->hasMany(" . $relation->target . "::class" . $relation_key . ");";
                 }
                 if ($relation->type == 'has_one') {
-                    $relationships .= snake_case($relation->target) . "()";
+                    $relationships .= $class_name . "()";
                     $relationships .= "\n\t{";
-                    $relationships .= "\n\t\treturn \$this->hasOne(" . $relation->target . "::class);";
+                    $relationships .= "\n\t\treturn \$this->hasOne(" . $relation->target . "::class" . $relation_key . ");";
                 }
                 $relationships .= "\n\t}";
             }
