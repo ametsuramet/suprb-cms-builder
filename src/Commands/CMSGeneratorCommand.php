@@ -505,7 +505,7 @@ class CMSGeneratorCommand extends Command
         //GENERATE TEMPLATE
         $Stub = str_replace("DummyNamespace", "App\Models", $Stub);
         $Stub = str_replace("DummyClass", $model->name, $Stub);
-        if ($model->primaryKey) {
+        if (isset($model->primaryKey)) {
             $Stub = str_replace("{{primaryKey}}", 'protected $primaryKey = "' . $model->primaryKey . '";', $Stub);
 
         } else {
@@ -552,6 +552,11 @@ class CMSGeneratorCommand extends Command
                     $dates .= "\n\t\t'" . $schema->field . "',";
                     break;
                 default:
+                    if (isset($schema->hide_casts)) {
+                        if ($schema->hide_casts) {
+                            break;
+                        }
+                    }
                     $casts .= "\n\t\t'" . $schema->field . "' => 'string',";
                     break;
             }
