@@ -325,8 +325,12 @@ class CMSGeneratorCommand extends Command
                     }
                     if (!$hide_form) {
                         $field = implode(" ", (explode("_", $schema->field)));
+                        $field = ucwords($field);
+                        if (isset($schema->label)) {
+                            $field = $schema->label;
+                        }
                         $formItems .= "\n\t\t\t\t<div class='form-group'>";
-                        $formItems .= "\n\t\t\t\t\t\t<label for=''>" . ucwords($field) . "</label>";
+                        $formItems .= "\n\t\t\t\t\t\t<label for=''>" . $field . "</label>";
 
                         if ($schema->form_type == 'file') {
                             $formItems .= "\n\t\t\t\t\t\t<input name='" . $schema->field . "' type='" . $schema->form_type . "' />";
@@ -371,13 +375,24 @@ class CMSGeneratorCommand extends Command
                     }
                     if (!$hide_column) {
                     $field = implode(" ", (explode("_", $schema->field)));
-                    $tableHeader .= "\n\t\t\t\t\t\t\t\t<th>" . ucwords($field) . "</th>";
+                    $field = ucwords($field);
+                    if (isset($schema->label)) {
+                        $field = $schema->label;
+                    }
+                    $tableHeader .= "\n\t\t\t\t\t\t\t\t<th>" . $field . "</th>";
                         if ($schema->type == 'boolean') { 
                             $tableBody .= "\n\t\t\t\t\t\t\t\t\t<td>{!! \$d->" . $schema->field . " ? '<span class=\'glyphicon glyphicon-ok-sign text-success\'></span>' : '<span class=\'glyphicon glyphicon-remove-sign text-danger\'></span>' !!}</td>";
                         } else if ($schema->form_type == 'file') {
                             $tableBody .= "\n\t\t\t\t\t\t\t\t\t<td><img src='{!! Storage::url(\$d->" . $schema->field . ") !!}' width='150' onerror=\"this.src='/images/notfound.jpeg';\" /></td>";
                         } else {
-                            $tableBody .= "\n\t\t\t\t\t\t\t\t\t<td>{!! \$d->" . $schema->field . " !!}</td>";
+                            if (isset($schema->relation_data)) {
+                                $relation_data = explode(".", $schema->relation_data);
+                                $tableBody .= "\n\t\t\t\t\t\t\t\t\t<td>{!! optional(\$d->" . current($relation_data) . ")->";
+                                next($relation_data);
+                                $tableBody .= current($relation_data)." !!}</td>";
+                            }  else {
+                                $tableBody .= "\n\t\t\t\t\t\t\t\t\t<td>{!! \$d->" . $schema->field . " !!}</td>";
+                            }
                         }    
                     }
                 }
