@@ -210,23 +210,39 @@ class CMSGeneratorCommand extends Command
 
         $adminlte = File::get(__DIR__ . '/../stubs/adminlte.stub');
         $mainNavigation = "";
+        $masterNavigation = "";
 
         foreach ($this->models as $key => $model) {
             $show_menu = 1;
+            $master_data = 0;
             if (isset($model->menu)) {
                 if (!$model->menu) {
                     $show_menu = 0;
                 }
             }
 
-            if ($show_menu) {
+            if (isset($model->master_data)) {
+                if ($model->master_data) {
+                    $master_data = 1;
+                }
+            }
+
+            if ($show_menu && !$master_data) {
                 $mainNavigation .= "\t\t[\n";
                 $mainNavigation .= "\t\t\t'text' => '" . $model->name . "',\n";
                 $mainNavigation .= "\t\t\t'url'  => 'admin/" . str_plural(snake_case($model->name)) . "',\n";
                 $mainNavigation .= "\t\t],\n";
             }
+
+            if ($show_menu && $master_data) {
+                $masterNavigation .= "\t\t[\n";
+                $masterNavigation .= "\t\t\t'text' => '" . $model->name . "',\n";
+                $masterNavigation .= "\t\t\t'url'  => 'admin/" . str_plural(snake_case($model->name)) . "',\n";
+                $masterNavigation .= "\t\t],\n";
+            }
         }
         $adminlte = str_replace("{{mainNavigation}}", $mainNavigation, $adminlte);
+        $adminlte = str_replace("{{masterNavigation}}", $masterNavigation, $adminlte);
         file_put_contents(config_path('adminlte.php'), $adminlte);
 
         //LARACAST FLASH

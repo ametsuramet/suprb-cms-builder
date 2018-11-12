@@ -110,6 +110,8 @@ return [
     'menu' => [
         'MAIN NAVIGATION',
 {{mainNavigation}}
+        'MASTER',
+{{masterNavigation}}
         'ACCOUNT SETTINGS',
         [
             'text' => 'Profile',
