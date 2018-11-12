@@ -547,6 +547,23 @@ class CMSGeneratorCommand extends Command
                     $custom_function .= "\n\t}";
                 }
 
+                foreach ($model->schema as $key => $schema) {
+                    if (isset($schema->mongo_id)) {
+                        if ($schema->mongo_id) {
+                            $custom_function .= "\n\tpublic function set".studly_case($schema->field)."Attribute(\$value)";
+                            $custom_function .= "\n\t{";
+                            $custom_function .= "\n\t\tif (\$this->attributes['".$schema->field."'])";
+                            $custom_function .= "\n\t\t\$this->attributes['".$schema->field."'] = new \MongoDB\BSON\ObjectId(\$value);";
+                            $custom_function .= "\n\t}";
+                        }
+                    }
+                    if ($schema->type == "dateTime") {
+                        $custom_function .= "\n\tpublic function set".studly_case($schema->field)."Attribute(\$value)";
+                        $custom_function .= "\n\t{";
+                        $custom_function .= "\n\t\t\$this->attributes['".$schema->field."'] = new \MongoDB\BSON\UTCDateTime(new \DateTime(str_replace(\"T\", \" \", \$value)));";
+                        $custom_function .= "\n\t}";
+                    }
+                }
             }
         }
         $Stub = str_replace("{{connection}}", "\n", $Stub);
