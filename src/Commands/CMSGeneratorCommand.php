@@ -8,7 +8,7 @@ use Spatie\Permission\Models\Permission;
 
 class CMSGeneratorCommand extends Command
 {
-    protected $signature = 'cms:generate';
+    protected $signature = 'cms:generate {--task=}';
     protected $description = 'Install Generate CMS Generator';
     private $models;
     private $migration_path;
@@ -85,6 +85,12 @@ class CMSGeneratorCommand extends Command
 
     public function handle()
     {
+        if ($this->option('task') == "automigrate") {
+            $this->Automigration();
+            exec('composer dump-autoload');
+            $this->alert("DONE");
+            exit();
+        }
         $this->alert("SUPRB CMS BUILDER by @ametsuramet");
         // ADMIN LTE
         // $this->info("Publish CMS-BUILDER JSON");
@@ -154,31 +160,36 @@ class CMSGeneratorCommand extends Command
         file_put_contents(database_path('migrations/2018_10_27_150248_add_provider_id.php'), $add_provider);
         file_put_contents(database_path('migrations/2018_10_27_145043_create_permission_tables.php'), $permission);
         if ($this->confirm('Do Automigration?')) {
-            $this->line("start migration ....");
-            $this->call('migrate');
-            $this->call('migrate', [
-                '--path' => '/database/migrations/cms',
-            ]);
-            $this->info("Migration Succeed");
-            \DB::table('users')->where('email', 'admin@admin')->delete();
-            \App\User::create([
-                'id' => 1,
-                'name' => 'admin',
-                'email' => 'admin@admin',
-                'password' => bcrypt('admin'),
-            ]);
-            $this->models->each(function ($model) {
-                $this->generatePermission($model);
-            });
-
+            $this->Automigration();
         }
 
         exec('composer dump-autoload');
         $this->alert("DONE");
     }
 
+    public function Automigration() 
+    {
+        $this->line("start migration ....");
+        $this->call('migrate');
+        $this->call('migrate', [
+            '--path' => '/database/migrations/cms',
+        ]);
+        $this->info("Migration Succeed");
+        \DB::table('users')->where('email', 'admin@admin')->delete();
+        \App\User::create([
+            'id' => 1,
+            'name' => 'admin',
+            'email' => 'admin@admin',
+            'password' => bcrypt('admin'),
+        ]);
+        $this->models->each(function ($model) {
+            $this->generatePermission($model);
+        });
+    }
+
     public function generatePermission($model)
     {
+        Permission::create(['name' => 'create ' . str_plural(snake_case($model->name))]);
         Permission::create(['name' => 'read ' . str_plural(snake_case($model->name))]);
         Permission::create(['name' => 'update ' . str_plural(snake_case($model->name))]);
         Permission::create(['name' => 'delete ' . str_plural(snake_case($model->name))]);
@@ -308,7 +319,9 @@ class CMSGeneratorCommand extends Command
         $Stub = File::get($this->getRouteApiStub());
         $newRouteApi = "";
         foreach ($this->models as $key => $model) {
-            $newRouteApi .= "\n\t\tRoute::resource('/" . str_plural(snake_case($model->name)) . "', 'Api\\" . $model->name . "Controller', ['as' => 'api']);";
+            if ($model->resource) {
+                $newRouteApi .= "\n\t\tRoute::resource('/" . str_plural(snake_case($model->name)) . "', 'Api\\" . $model->name . "Controller', ['as' => 'api']);";
+            }
         }
         $Stub = str_replace("{{newRouteApi}}", $newRouteApi, $Stub);
         $this->info('Append Api Routes');
@@ -493,13 +506,32 @@ class CMSGeneratorCommand extends Command
                 }
                 $fields .= "\n\t\t\t\$table->" . current($type) . "('" . $schema->field . "', ".$length.")";
             } else {
-                $fields .= "\n\t\t\t\$table->" . current($type) . "('" . $schema->field . "')";
+                $length = null;
+                if (isset($type[1])) {
+                    if ($type[1]) {
+                        $length = $type[1];
+                    }
+                }
+                if ($length) {
+                    $fields .= "\n\t\t\t\$table->" . current($type) . "('" . $schema->field . "', ".$length.")";
+                } else {
+                    $fields .= "\n\t\t\t\$table->" . current($type) . "('" . $schema->field . "')";
+                }
             }
-            if ($schema->nullable) {
-                $fields .= "->nullable()";
+            if (isset($schema->nullable)) {
+                if ($schema->nullable) {
+                    $fields .= "->nullable()";
+                }
             }
-            if ($schema->default && current($type) != 'jsonb' && current($type) != 'text' && current($type) != 'json' && current($type) != 'geometry') {
-                $fields .= "->default(" . (strtolower($schema->default) == 'null' || strtolower($schema->default) == 'true' || strtolower($schema->default) == 'false' ? $schema->default : "'" . $schema->default . "'") . ")";
+            if (isset($schema->default)) {
+                if ($schema->default == "0" && current($type) == "boolean") {
+                    $fields .= "->default(0)";
+                } elseif ($schema->default == "now()" && current($type) == "dateTime") {
+                    $fields .= "->default(\DB::raw('CURRENT_TIMESTAMP'))";
+                } else
+                if ($schema->default && current($type) != 'jsonb' && current($type) != 'text' && current($type) != 'json' && current($type) != 'geometry') {
+                    $fields .= "->default(" . (strtolower($schema->default) == 'null' || strtolower($schema->default) == 'true' || strtolower($schema->default) == 'false' ? $schema->default : "'" . $schema->default . "'") . ")";
+                }
             }
             if (in_array("unsigned", $type)) {
                 $fields .= "->unsigned()";
