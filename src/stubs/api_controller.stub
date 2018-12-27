@@ -7,8 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\{{DummyModel}}ApiCreateRequest;
 use App\Http\Requests\{{DummyModel}}ApiUpdateRequest;
 use Illuminate\Http\Request;
-use App\Resources\{{DummyModel}} as {{DummyModel}}Single;
-use App\Resources\{{DummyModel}}Collection;
+use App\Http\Resources\{{DummyModel}} as {{DummyModel}}Single;
+use App\Http\Resources\{{DummyModel}}Collection;
 
 class DummyClass extends Controller
 {

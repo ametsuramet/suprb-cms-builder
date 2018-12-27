@@ -454,6 +454,12 @@ class CMSGeneratorCommand extends Command
                 $upload .= "\n\t\t\t\$input['" . $schema->field . "'] = \$path;";
                 $upload .= "\n\t\t\t}";
             }
+            if ($schema->form_type == 'datetime-local') {
+                $upload .= "\n\t\t\t\$input['" . $schema->field . "'] = \Carbon\Carbon::parse(\$input['" . $schema->field . "'])->format('Y-m-d H:i:s');";
+            }
+            if ($schema->field == 'password') {
+                $upload .= "\n\t\t\t\$input['" . $schema->field . "'] = bcrypt(\$input['" . $schema->field . "']);";
+            }
         }
         $Stub = str_replace("DummyClass", $model->name . 'Controller', $Stub);
         $Stub = str_replace("DummyNamespace", 'App\Http\Controllers\Admin', $Stub);
@@ -582,6 +588,17 @@ class CMSGeneratorCommand extends Command
             $Stub = str_replace("{{useSoftDeletes}}", "", $Stub);
         }
 
+        if (isset($model->observer)) {
+            $boot  = "\n\tpublic static function boot()";
+            $boot .= "\n\t{";
+            $boot .= "\n\t\tparent::boot();";
+            $boot .= "\n\t\t\$class = get_called_class();";
+            foreach ($model->observer as $key => $observer) {
+                $boot .= "\n\t\t\$class::observe(new \App\Observers\\".$observer.");";
+            }
+            $boot .= "\n\t}";
+            $Stub = str_replace("{{boot}}", $boot, $Stub);
+        }
         $custom_function = "";
         $Stub = str_replace("{{table}}", str_plural(snake_case($model->name)), $Stub);
         if (isset($model->mongo)) {

@@ -11,5 +11,5 @@
 |
 */
 Route::post('/login', 'Auth\AuthenticateController@authenticate');
-Route::middleware(['jwt.auth'])->group(function () {{{newRouteApi}}
+Route::middleware(['auth:api'])->group(function () {{{newRouteApi}}
 });
