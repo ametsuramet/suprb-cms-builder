@@ -62,7 +62,7 @@ class DummyClass extends Controller
      */
     public function show($id)
     {
-        return {{DummyModel}}Single($this->{{name}}->findOrFail($id));
+        return new {{DummyModel}}Single($this->{{name}}->findOrFail($id));
     }
 
     /**

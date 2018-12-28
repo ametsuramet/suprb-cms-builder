@@ -85,6 +85,7 @@ class CMSGeneratorCommand extends Command
 
     public function handle()
     {
+        $this->getJsonFile();
         if ($this->option('task') == "automigrate") {
             $this->Automigration();
             exec('composer dump-autoload');
@@ -112,7 +113,6 @@ class CMSGeneratorCommand extends Command
 
         $this->call('storage:link');
 
-        $this->getJsonFile();
         $this->thirdParty();
         app()['cache']->forget('spatie.permission.cache');
 
