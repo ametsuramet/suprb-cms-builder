@@ -450,8 +450,8 @@ class CMSGeneratorCommand extends Command
         foreach ($model->schema as $key => $schema) {
             if ($schema->form_type == 'file') {
                 $upload .= "\n\t\t\tif(\$request->hasFile('" . $schema->field . "')) {";
-                $upload .= "\n\t\t\t\$path = \$request->" . $schema->field . "->store('images', env('FILESYSTEM_DRIVER', 'public'));";
-                $upload .= "\n\t\t\t\$input['" . $schema->field . "'] = \$path;";
+                $upload .= "\n\t\t\t\t\$path = \$request->" . $schema->field . "->store('images', env('FILESYSTEM_DRIVER', 'public'));";
+                $upload .= "\n\t\t\t\t\$input['" . $schema->field . "'] = \$path;";
                 $upload .= "\n\t\t\t}";
             }
             if ($schema->form_type == 'datetime-local') {
@@ -518,7 +518,7 @@ class CMSGeneratorCommand extends Command
                         $length = $type[1];
                     }
                 }
-                if ($length) {
+                if ($length && is_numeric($length)) {
                     $fields .= "\n\t\t\t\$table->" . current($type) . "('" . $schema->field . "', ".$length.")";
                 } else {
                     $fields .= "\n\t\t\t\$table->" . current($type) . "('" . $schema->field . "')";
@@ -587,6 +587,8 @@ class CMSGeneratorCommand extends Command
             $Stub = str_replace("{{softDeletes}}", "", $Stub);
             $Stub = str_replace("{{useSoftDeletes}}", "", $Stub);
         }
+        
+        $boot = "";
 
         if (isset($model->observer)) {
             $boot  = "\n\tpublic static function boot()";

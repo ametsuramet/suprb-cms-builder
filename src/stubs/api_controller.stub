@@ -25,7 +25,7 @@ class DummyClass extends Controller
      */
     public function index(Request $request)
     {
-        return {{DummyModel}}Collection::collection($this->{{name}}->paginate());
+        return new {{DummyModel}}Collection($this->{{name}}->paginate());
     }
 
     /**

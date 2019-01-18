@@ -40,10 +40,7 @@ class DummyClass extends Controller
      */
     public function create()
     {
-        ${{name}} = $this->{{name}}->all();
-        $data = $this->{{name}};
-
-        return view('admin.{{name}}.create', compact('data', "{{name}}"));
+        return view('admin.{{name}}.create'));
     }
 
     /**
@@ -85,10 +82,8 @@ class DummyClass extends Controller
      */
     public function edit($id)
     {
-        //
-        ${{name}} = $this->{{name}}->all();
         $data = $this->{{name}}->find($id);
-        return view('admin.{{name}}.edit', compact('data', '{{name}}'));
+        return view('admin.{{name}}.edit', compact('data'));
     }
 
     /**
