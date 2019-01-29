@@ -40,7 +40,7 @@ class DummyClass extends Controller
      */
     public function create()
     {
-        return view('admin.{{name}}.create'));
+        return view('admin.{{name}}.create');
     }
 
     /**
