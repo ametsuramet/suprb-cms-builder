@@ -1,15 +1,16 @@
 {
     "name": "ametsuramet/suprb-cms-builder",
-    "description": "CMS Builder for Laravel 5.5+",
+    "description": "CMS Builder for Laravel 5.7+",
     "type": "library",
     "require": {
-        "laravel/framework": ">=5.5.0",
+        "laravel/framework": ">=5.7.0",
         "jeroennoten/laravel-adminlte": "^1.24",
         "laracasts/flash": "^3.0",
         "spatie/laravel-permission": "^2.21",
         "spatie/laravel-sluggable": "^2.1",
         "unisharp/laravel-filemanager": "~1.8",
         "predis/predis": ">=v1.1.0",
+        "laravelcollective/html": "^5.7",
         "laravel/socialite": ">=v3.0.0",
         "tymon/jwt-auth": "1.0.*"
     },

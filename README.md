@@ -1,4 +1,4 @@
-# suprb-cms-builder
+# SUPRB CMS BUILDER
 
 ## INSTALL 
 **So easy to install!** Install with composer:
@@ -120,3 +120,4 @@ php artisan cms:generate
 -  [Predis](https://github.com/nrk/predis).
 -  [Laravel Socialite](https://github.com/laravel/socialite).
 -  [Laravel JWT Auth](https://github.com/tymondesigns/jwt-auth).
+-  [Laravel Collective](https://laravelcollective.com/).
