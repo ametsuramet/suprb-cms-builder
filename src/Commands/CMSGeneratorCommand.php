@@ -599,8 +599,8 @@ class CMSGeneratorCommand extends Command
                 $boot .= "\n\t\t\$class::observe(new \App\Observers\\".$observer.");";
             }
             $boot .= "\n\t}";
-            $Stub = str_replace("{{boot}}", $boot, $Stub);
         }
+        $Stub = str_replace("{{boot}}", $boot, $Stub);
         $custom_function = "";
         $Stub = str_replace("{{table}}", str_plural(snake_case($model->name)), $Stub);
         if (isset($model->mongo)) {
