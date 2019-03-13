@@ -8,7 +8,7 @@ use Spatie\Permission\Models\Permission;
 
 class CMSGeneratorCommand extends Command
 {
-    protected $signature = 'cms:generate {--task=}';
+    protected $signature = 'cms:generate {--task=} {--file=}';
     protected $description = 'Install Generate CMS Generator';
     private $models;
     private $migration_path;
@@ -86,7 +86,25 @@ class CMSGeneratorCommand extends Command
     public function handle()
     {
         $this->getJsonFile();
+        $ModelStub = File::get($this->getModelStub());
+        $MigrationStub = File::get($this->getMigrationStub());
+        $ControllerStub = File::get($this->getControllerStub());
+
         if ($this->option('task') == "automigrate") {
+            $this->Automigration();
+            exec('composer dump-autoload');
+            $this->alert("DONE");
+            exit();
+        }
+
+        if ($this->option('task') == "update") {
+            if (!$this->option('file')) {
+                $this->alert("Please select file with options --file=filename");
+                exit();
+            }
+            $this->alert('update with file :'.  $this->option('file'));
+            $this->getJsonFile($this->option('file'));
+            $this->mainGenerator($ModelStub, $MigrationStub, $ControllerStub);
             $this->Automigration();
             exec('composer dump-autoload');
             $this->alert("DONE");
@@ -133,9 +151,23 @@ class CMSGeneratorCommand extends Command
         File::makeDirectory($this->api_controller_path, $mode = 0777, true, true);
 
         // dd([$this->migration_path, $this->model_path, $this->controller_path, $this->view_path]);
-        $ModelStub = File::get($this->getModelStub());
-        $MigrationStub = File::get($this->getMigrationStub());
-        $ControllerStub = File::get($this->getControllerStub());
+        
+        $this->mainGenerator($ModelStub, $MigrationStub, $ControllerStub);
+
+        $add_provider = File::get($this->getMigrationAddProviderStub());
+        $permission = File::get($this->getMigrationPermissionStub());
+        file_put_contents(database_path('migrations/2018_10_27_150248_add_provider_id.php'), $add_provider);
+        file_put_contents(database_path('migrations/2018_10_27_145043_create_permission_tables.php'), $permission);
+        if ($this->confirm('Do Automigration?')) {
+            $this->Automigration();
+        }
+
+        exec('composer dump-autoload');
+        $this->alert("DONE");
+    }
+
+    public function mainGenerator($ModelStub, $MigrationStub, $ControllerStub) 
+    {
         $this->models->each(function ($model) use ($ModelStub, $MigrationStub, $ControllerStub) {
             $show_menu = 1;
             if (isset($model->menu)) {
@@ -154,17 +186,6 @@ class CMSGeneratorCommand extends Command
         });
         $this->appendRouteWeb();
         $this->appendRouteApi();
-
-        $add_provider = File::get($this->getMigrationAddProviderStub());
-        $permission = File::get($this->getMigrationPermissionStub());
-        file_put_contents(database_path('migrations/2018_10_27_150248_add_provider_id.php'), $add_provider);
-        file_put_contents(database_path('migrations/2018_10_27_145043_create_permission_tables.php'), $permission);
-        if ($this->confirm('Do Automigration?')) {
-            $this->Automigration();
-        }
-
-        exec('composer dump-autoload');
-        $this->alert("DONE");
     }
 
     public function Automigration() 
@@ -737,9 +758,9 @@ class CMSGeneratorCommand extends Command
         }
     }
 
-    public function getJsonFile()
+    public function getJsonFile($filename = 'cmsbuilder.json')
     {
-        $file = File::get(base_path('cmsbuilder.json'));
+        $file = File::get(base_path($filename));
         $this->models = collect(json_decode($file));
     }
 
