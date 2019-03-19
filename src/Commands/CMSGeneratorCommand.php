@@ -212,6 +212,7 @@ class CMSGeneratorCommand extends Command
 
     public function generatePermission($model)
     {
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
         Permission::create(['name' => 'create ' . str_plural(snake_case($model->name))]);
         Permission::create(['name' => 'read ' . str_plural(snake_case($model->name))]);
         Permission::create(['name' => 'update ' . str_plural(snake_case($model->name))]);

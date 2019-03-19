@@ -115,7 +115,7 @@ class DummyClass extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy({{DummyModel}}DeleteRequest, $id)
+    public function destroy({{DummyModel}}DeleteRequest $request, $id)
     {
         try {
             $this->{{name}}->destroy($id);
